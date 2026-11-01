@@ -103,7 +103,9 @@
 <script src="i18n.js?v=21"></script>
 <script>
 'use strict';
-const VERSION='2.3';
+const VERSION='2.4';
+// 앱 안에서 친구에게 보낼 공개 주소(웹 판) / public web URL used for share links inside the native app
+const PUBLIC_BASE='https://shb2217-debug.github.io/apps/led/';
 // ===== 언어 / i18n =====
 const L=(new URLSearchParams(location.search).get('lang')||navigator.language||'en').slice(0,2);
 const I18N=window.LED_I18N;
@@ -131,7 +133,7 @@ $('text').value=S.text; $('size').value=S.size; $('speed').value=S.speed; $('bli
 ['text','size','speed','blink','glow','mirror'].forEach(id=>$(id).addEventListener('input',()=>{ S.text=$('text').value; S.size=+$('size').value; S.speed=+$('speed').value; S.blink=$('blink').checked; S.glow=$('glow').checked; S.mirror=$('mirror').checked; persist(); }));
 function persist(){ try{ localStorage.setItem('led_last',JSON.stringify(S)); }catch(e){} }
 // ===== 이어 붙이기 안내 화면 / chain wizard =====
-function shareUrl(){ const hw=Math.max(innerWidth,innerHeight), hh=Math.min(innerWidth,innerHeight); S.hw=hw; S.hh=hh; persist(); const c={text:S.text,fg:S.fg,bg:S.bg,size:S.size,speed:S.speed,motion:S.motion,blink:S.blink,glow:S.glow,mirror:S.mirror,n:S.n,hw,hh}; return location.origin+location.pathname+'?c='+b64e(c); }
+function shareUrl(){ const hw=Math.max(innerWidth,innerHeight), hh=Math.min(innerWidth,innerHeight); S.hw=hw; S.hh=hh; persist(); const c={text:S.text,fg:S.fg,bg:S.bg,size:S.size,speed:S.speed,motion:S.motion,blink:S.blink,glow:S.glow,mirror:S.mirror,n:S.n,hw,hh}; const inApp=location.hostname==='localhost'||location.protocol==='capacitor:'||location.protocol==='file:'; return (inApp? PUBLIC_BASE : location.origin+location.pathname)+'?c='+b64e(c); }
 async function doShare(){ const url=shareUrl(); track('share',{n:S.n});
   if(navigator.share){ try{ await navigator.share({title:T.title,text:T.c2_p,url}); return true; }catch(e){} }
   try{ await navigator.clipboard.writeText(url); toast(T.copied); }catch(e){ prompt('URL',url); } return true; }
