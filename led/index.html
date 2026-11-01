@@ -112,7 +112,7 @@
 <div id="toast"></div>
 <script>
 'use strict';
-const VERSION='1.5';
+const VERSION='1.6';
 // ===== 언어 / i18n =====
 const L=(navigator.language||'en').slice(0,2);
 const I18N={
@@ -199,7 +199,7 @@ function makeRenderer(canvas, chained){
     const lines=(S.text||T.ph.split('\n')[0]).split('\n').map(s=>s.trim()).filter(Boolean); if(!lines.length) lines.push('LED');
     const multi = chained && S.n>1;
     // 좌표계: 이어 붙이기면 가상 자(VU×VH)를 화면 폭에 맞춰 확대, 아니면 실제 픽셀
-    let cw=W, ch=H; if(multi){ const sc=W/VU; ctx.setTransform(sc,0,0,sc,0,(H-VH*sc)/2); cw=VU; ch=VH; }
+    let cw=W, ch=H; if(multi){ const dpr=devicePixelRatio||1, sc=(W/dpr)/VU; ctx.setTransform(sc*dpr,0,0,sc*dpr,0,(H-VH*sc*dpr)/2); cw=VU; ch=VH; } // 눈금은 dp(실제 크기에 가까움) 기준 → 폰마다 cm당 속도 거의 같음
     const n=multi? S.n : 1, k=multi? S.k-1 : 0; const VW=cw*n;
     const fs=ch*(S.size/100)*.9; ctx.font=`900 ${fs}px system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif`; ctx.textBaseline='middle';
     const sp=(S.speed/100)*cw*1.4+cw*.05; const gap=Math.max(cw*.3, fs*1.2);
