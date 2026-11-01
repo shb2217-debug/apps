@@ -112,7 +112,7 @@
 <div id="toast"></div>
 <script>
 'use strict';
-const VERSION='1.4';
+const VERSION='1.5';
 // ===== 언어 / i18n =====
 const L=(navigator.language||'en').slice(0,2);
 const I18N={
@@ -120,12 +120,12 @@ const I18N={
    chain:'폰 이어 붙이기',chain_help:'친구 폰을 나란히 놓으면 한 문장이 폰을 건너 흐릅니다. 링크를 보내고, 각자 «몇 번째»를 고른 뒤, 10초 안에 모두 «띄우기»를 누르세요.',phones:'폰 수',mine:'나는',share:'친구에게 링크 보내기',share_help:'같은 글자·색·속도가 그대로 전달됩니다.',sync:'맞추기',synced:'맞췄습니다 · 10초 안에 모두 누르세요',copied:'링크를 복사했습니다',savedok:'저장했습니다',mid:'대 중 번째',
    open_chain:'📱📱 친구 폰이랑 이어 붙이기',c1_h:'폰 몇 대를 이어요?',c1_p:'나란히 놓은 폰들을 한 문장이 건너갑니다. 글자·색·속도는 지금 설정 그대로.',c1_next:'다음 →',back:'← 뒤로',
    c2_h:'친구에게 링크 보내기',c2_p:'친구가 링크를 열면 같은 글자가 들어 있고, 자기 자리만 고르면 됩니다.',c2_share:'링크 보내기',c2_next:'보냈어요 · 다음 →',
-   c3_h:'내 폰은 몇 번째?',c3_p:'왼쪽부터 1번. 폰마다 다르게 골라요.',c3_p2:'모두 고른 뒤, 10초 안에 각자 «함께 띄우기»를 누르세요. 카운트다운 뒤 동시에 시작합니다.',c3_go:'함께 띄우기 ▶',count:'다른 폰도 지금 누르세요'},
+   c3_h:'내 폰은 몇 번째?',c3_p:'왼쪽부터 1번. 폰마다 다르게 골라요.',c3_p2:'글자는 마지막 폰(오른쪽)에서 들어와 1번 폰(왼쪽)으로 흘러갑니다. 모두 고른 뒤 10초 안에 각자 «함께 띄우기»를 누르세요. 카운트다운 뒤 동시에 시작합니다.',c3_go:'함께 띄우기 ▶',count:'다른 폰도 지금 누르세요'},
  en:{title:'LED Banner',sub:'Type text and tap Show. New lines play in order. Rotate to landscape for bigger letters.',ph:'I ♥ YOU\n(new line = next message)',color:'Text',bg:'Background',size:'Size',speed:'Speed',motion:'Motion',m1:'Scroll',m2:'Still',m3:'Bounce',blink:'Blink',glow:'Neon glow',mirror:'Mirror',saved:'Saved',go:'Show ▶',tip:'Tap the screen once for the menu. Turn brightness up for best results.',
    chain:'Chain phones',chain_help:'Line up your friends\' phones and one message flows across all of them. Send the link, each picks their position, then everyone taps Show within 10 seconds.',phones:'Phones',mine:'Mine',share:'Send link to friends',share_help:'Text, colors and speed are shared as-is.',sync:'Re-sync',synced:'Synced · everyone tap within 10 s',copied:'Link copied',savedok:'Saved',mid:'of',
    open_chain:'📱📱 Chain with friends\' phones',c1_h:'How many phones?',c1_p:'One message flows across phones placed side by side. Your text, colors and speed are used as-is.',c1_next:'Next →',back:'← Back',
    c2_h:'Send the link to friends',c2_p:'When a friend opens it, the same text is already there. They only pick their position.',c2_share:'Send link',c2_next:'Sent · Next →',
-   c3_h:'Which phone is mine?',c3_p:'Count from the left. Each phone picks a different number.',c3_p2:'When everyone has picked, each taps «Start together» within 10 seconds. A countdown starts all phones at once.',c3_go:'Start together ▶',count:'Everyone tap now'},
+   c3_h:'Which phone is mine?',c3_p:'Count from the left. Each phone picks a different number.',c3_p2:'Text enters on the last phone (right) and flows toward phone 1 (left). When everyone has picked, each taps «Start together» within 10 seconds. A countdown starts all phones at once.',c3_go:'Start together ▶',count:'Everyone tap now'},
  ja:{title:'LED電光掲示板',sub:'文字を入れて「表示」。改行すると順番に出ます。横向きで大きく。',ph:'大好き ♥\n(改行で次の文)',color:'文字色',bg:'背景色',size:'サイズ',speed:'速さ',motion:'動き',m1:'流れる',m2:'固定',m3:'バウンド',blink:'点滅',glow:'ネオン',mirror:'ミラー',saved:'保存',go:'表示 ▶',tip:'画面を一度タップするとメニュー。明るさ最大で見やすく。',
    chain:'スマホをつなぐ',chain_help:'友だちのスマホを並べると、1つの文が画面をまたいで流れます。リンクを送り、各自「何番目」を選び、10秒以内に全員「表示」を押してください。',phones:'台数',mine:'自分は',share:'友だちにリンクを送る',share_help:'文字・色・速さがそのまま共有されます。',sync:'合わせる',synced:'合わせました · 10秒以内に全員押す',copied:'リンクをコピー',savedok:'保存しました',mid:'台中',
    open_chain:'📱📱 友だちのスマホとつなぐ',c1_h:'何台つなぐ？',c1_p:'並べたスマホを1つの文が流れます。文字・色・速さは今の設定のまま。',c1_next:'次へ →',back:'← 戻る',
@@ -190,31 +190,32 @@ drawPresets();
 let epoch=0; function syncEpoch(){ epoch=Math.floor(Date.now()/10000)*10000; }
 function nextEpoch(){ epoch=Math.ceil((Date.now()+500)/10000)*10000; } // 다음 10초 경계에 모두 같이 시작
 function makeRenderer(canvas, chained){
-  const ctx=canvas.getContext('2d'); let W=0,H=0,raf=0, t0=performance.now(), x=null, dir=1, line=0, lineT=0, lastWrap=0;
+  const ctx=canvas.getContext('2d'); let W=0,H=0,raf=0, t0=performance.now(), x=null, dir=1, line=0, lineT=0;
+  const VU=1778, VH=1000; // 이어 붙이기용 가상 자: 폰 한 대 = 1778x1000 (폰 크기가 달라도 같은 눈금)
   function fit(){ const w=Math.round(canvas.clientWidth*devicePixelRatio), h=Math.round(canvas.clientHeight*devicePixelRatio); if(w!==W||h!==H){ W=canvas.width=w; H=canvas.height=h; } }
   function frame(now){
     fit(); const dt=Math.min(.05,(now-t0)/1000); t0=now;
-    ctx.fillStyle=S.bg; ctx.fillRect(0,0,W,H);
+    ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle=S.bg; ctx.fillRect(0,0,W,H);
     const lines=(S.text||T.ph.split('\n')[0]).split('\n').map(s=>s.trim()).filter(Boolean); if(!lines.length) lines.push('LED');
-    const n=chained? S.n : 1, k=chained? S.k-1 : 0; const VW=W*n; // 가상 전체 폭 / virtual width across phones
-    const fs=H*(S.size/100)*.9; ctx.font=`900 ${fs}px system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif`; ctx.textBaseline='middle';
-    const sp=(S.speed/100)*W*1.4+W*.05; const gap=Math.max(W*.3, fs*1.2);
-    const scrolling = S.motion==='scroll' || n>1;
-    let text, dx;
+    const multi = chained && S.n>1;
+    // 좌표계: 이어 붙이기면 가상 자(VU×VH)를 화면 폭에 맞춰 확대, 아니면 실제 픽셀
+    let cw=W, ch=H; if(multi){ const sc=W/VU; ctx.setTransform(sc,0,0,sc,0,(H-VH*sc)/2); cw=VU; ch=VH; }
+    const n=multi? S.n : 1, k=multi? S.k-1 : 0; const VW=cw*n;
+    const fs=ch*(S.size/100)*.9; ctx.font=`900 ${fs}px system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif`; ctx.textBaseline='middle';
+    const sp=(S.speed/100)*cw*1.4+cw*.05; const gap=Math.max(cw*.3, fs*1.2);
+    const scrolling = S.motion==='scroll' || multi;
+    const on = !S.blink || (Math.floor(now/400)%2===0);
     if(scrolling){
-      // 모든 줄을 한 띠로 이어 붙여 위치를 시간으로 계산(폰마다 같은 시각 → 같은 위치) / one long strip, position from shared clock
       const widths=lines.map(t=>ctx.measureText(t).width); const total=widths.reduce((a,w)=>a+w+gap,0)+VW;
       const elapsed = chained ? Math.max(0,(Date.now()-epoch)/1000) : (now-(frame.start||(frame.start=now)))/1000;
-      let pos = VW - (elapsed*sp)%total; // 띠의 시작점(가상 좌표)
-      ctx.save(); if(S.mirror){ ctx.translate(W,0); ctx.scale(-1,1); } ctx.fillStyle=S.fg; if(S.glow){ ctx.shadowColor=S.fg; ctx.shadowBlur=fs*.25; }
-      const on = !S.blink || (Math.floor(now/400)%2===0);
-      if(on) for(let pass=0; pass<2; pass++){ let p=pos+pass*total; for(let i=0;i<lines.length;i++){ const vx=p; const sx=vx-k*W; if(sx<W && sx+widths[i]>0) ctx.fillText(lines[i],sx,H/2); p+=widths[i]+gap; } }
-      ctx.restore();
+      const pos = VW - (elapsed*sp)%total; // 띠의 시작점(가상 좌표, 오른쪽 끝 폰에서 들어와 1번 폰으로 빠짐)
+      if(on){ ctx.save(); if(S.mirror){ ctx.translate(cw,0); ctx.scale(-1,1); } ctx.fillStyle=S.fg; if(S.glow){ ctx.shadowColor=S.fg; ctx.shadowBlur=fs*.25; }
+        for(let pass=0; pass<2; pass++){ let q=pos+pass*total; for(let i=0;i<lines.length;i++){ const sx=q-k*cw; if(sx<cw && sx+widths[i]>0) ctx.fillText(lines[i],sx,ch/2); q+=widths[i]+gap; } }
+        ctx.restore(); }
     } else {
-      lineT+=dt; if(lineT>3){ lineT=0; line=(line+1)%lines.length; } text=lines[line%lines.length]; const tw=ctx.measureText(text).width;
-      if(S.motion==='bounce'){ if(x===null) x=Math.max(0,(W-tw)/2); if(tw<W){ x+=dir*sp*dt*.5; if(x<=0){x=0;dir=1;} if(x+tw>=W){x=W-tw;dir=-1;} } dx=x; } else dx=(W-tw)/2;
-      const on = !S.blink || (Math.floor(now/400)%2===0);
-      if(on){ ctx.save(); if(S.mirror){ ctx.translate(W,0); ctx.scale(-1,1); } ctx.fillStyle=S.fg; if(S.glow){ ctx.shadowColor=S.fg; ctx.shadowBlur=fs*.25; } ctx.fillText(text,dx,H/2); ctx.restore(); }
+      lineT+=dt; if(lineT>3){ lineT=0; line=(line+1)%lines.length; } const text=lines[line%lines.length]; const tw=ctx.measureText(text).width; let dx;
+      if(S.motion==='bounce'){ if(x===null) x=Math.max(0,(cw-tw)/2); if(tw<cw){ x+=dir*sp*dt*.5; if(x<=0){x=0;dir=1;} if(x+tw>=cw){x=cw-tw;dir=-1;} } dx=x; } else dx=(cw-tw)/2;
+      if(on){ ctx.save(); if(S.mirror){ ctx.translate(cw,0); ctx.scale(-1,1); } ctx.fillStyle=S.fg; if(S.glow){ ctx.shadowColor=S.fg; ctx.shadowBlur=fs*.25; } ctx.fillText(text,dx,ch/2); ctx.restore(); }
     }
     raf=requestAnimationFrame(frame);
   }
