@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000">
+<title>LED Banner · 전광판</title>
+<style>
+  :root{--bg:#0b0b0d;--panel:#16161a;--line:#2a2a30;--fg:#f2f2f2;--muted:#9a9aa3;--acc:#ffd54a}
+  html,body{margin:0;height:100%;overflow-x:hidden;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;-webkit-user-select:none;user-select:none}
+  #editor{max-width:520px;margin:0 auto;padding:16px 16px 40px;box-sizing:border-box}
+  h1{font-size:20px;margin:8px 0 2px;letter-spacing:.02em}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  textarea{width:100%;box-sizing:border-box;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:22px;min-height:84px;resize:none;outline:none;-webkit-user-select:text;user-select:text}
+  .row{display:flex;gap:10px;align-items:center;margin:12px 0}
+  .row label{flex:0 0 76px;color:var(--muted);font-size:13px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{width:34px;height:34px;border-radius:50%;border:2px solid transparent;box-sizing:border-box}
+  .chip.on{border-color:#fff;box-shadow:0 0 0 2px #000 inset}
+  input[type=range]{flex:1;accent-color:var(--acc)}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;flex:1}
+  .seg button{flex:1;background:none;border:0;color:var(--muted);padding:10px 0;font-size:14px}
+  .seg button.on{background:#2b2b33;color:#fff}
+  .toggle{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+  .toggle input{accent-color:var(--acc);width:20px;height:20px}
+  #go{width:100%;margin-top:14px;padding:18px;border:0;border-radius:16px;background:var(--acc);color:#111;font-size:20px;font-weight:700}
+  .presets{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+  .preset{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:8px 12px;font-size:14px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .preview{height:80px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line);margin-top:6px}
+  .preview canvas{width:100%;height:100%;display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:14px}
+  .card h3{margin:0 0 6px;font-size:15px}
+  .card p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.5}
+  .btn2{background:#2b2b33;border:1px solid var(--line);color:#fff;border-radius:10px;padding:10px 14px;font-size:14px}
+  .btn2.acc{background:var(--acc);color:#111;border:0;font-weight:700}
+  .num{display:flex;align-items:center;gap:6px}
+  .num button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#2b2b33;color:#fff;font-size:18px}
+  .num b{min-width:26px;text-align:center;font-size:18px}
+  #stage{display:none;position:fixed;inset:0;background:#000}
+  #stage canvas{width:100%;height:100%;display:block}
+  #hud{position:absolute;left:0;right:0;bottom:0;padding:18px;display:flex;justify-content:space-between;align-items:center;opacity:0;transition:opacity .3s}
+  #hud.show{opacity:1}
+  #hud button{background:#0009;border:1px solid #fff5;color:#fff;border-radius:12px;padding:12px 18px;font-size:15px}
+  #hud .mid{color:#fffb;font-size:14px;text-align:center}
+  .tiny{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.5}
+  #chain{display:none;position:fixed;inset:0;background:var(--bg);z-index:5;overflow:auto}
+  #chain .in{max-width:520px;margin:0 auto;padding:18px 16px 40px}
+  .step{display:none}.step.on{display:block}
+  .big{width:100%;padding:18px;border:0;border-radius:16px;background:var(--acc);color:#111;font-size:20px;font-weight:700;margin-top:14px}
+  .big.sec{background:#2b2b33;color:#fff;border:1px solid var(--line)}
+  .phones{display:flex;gap:10px;justify-content:center;margin:18px 0}
+  .ph{width:52px;height:92px;border-radius:12px;border:2px solid var(--line);background:#000;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--muted)}
+  .ph.on{border-color:var(--acc);color:var(--acc);box-shadow:0 0 14px #ffd54a66}
+  .pick{display:flex;gap:10px;justify-content:center;margin:10px 0}
+  .pick button{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);background:#2b2b33;color:#fff;font-size:22px;font-weight:700}
+  .pick button.on{background:var(--acc);color:#111;border:0}
+  .h2{font-size:22px;font-weight:800;margin:6px 0 6px}
+  .p{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 8px}
+  .strip{height:54px;border-radius:10px;background:#000;border:1px solid var(--line);margin:8px 0 2px;overflow:hidden}
+  .strip canvas{width:100%;height:100%;display:block}
+  #count{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:#000;color:#fff}
+  #count b{font-size:28vw;line-height:1}
+  #count span{font-size:16px;color:#aaa;margin-top:10px}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+</style>
+</head>
+<body>
+<div id="editor">
+  <h1 id="t_title">LED 전광판</h1>
+  <p class="sub" id="t_sub"></p>
+  <textarea id="text" maxlength="400" rows="2"></textarea>
+  <div class="preview"><canvas id="pv"></canvas></div>
+  <div class="row"><label id="t_color"></label><div class="chips" id="fg"></div></div>
+  <div class="row"><label id="t_bg"></label><div class="chips" id="bg"></div></div>
+  <div class="row"><label id="t_size"></label><input type="range" id="size" min="40" max="100" value="80"></div>
+  <div class="row"><label id="t_speed"></label><input type="range" id="speed" min="0" max="100" value="45"></div>
+  <div class="row"><label id="t_motion"></label><div class="seg" id="motion"><button data-v="scroll" class="on" id="t_m1"></button><button data-v="still" id="t_m2"></button><button data-v="bounce" id="t_m3"></button></div></div>
+  <div class="row">
+    <span class="toggle"><input type="checkbox" id="blink"><span id="t_blink"></span></span>
+    <span class="toggle"><input type="checkbox" id="glow" checked><span id="t_glow"></span></span>
+    <span class="toggle"><input type="checkbox" id="mirror"><span id="t_mirror"></span></span>
+  </div>
+  <div class="row"><label id="t_saved"></label><div class="presets" id="presets"></div></div>
+  <button id="go"></button>
+  <button class="big sec" id="open_chain"></button>
+  <p class="tiny" id="t_tip"></p>
+</div>
+<div id="chain"><div class="in">
+  <div class="step" id="st1">
+    <div class="h2" id="c1_h"></div><p class="p" id="c1_p"></p>
+    <div class="strip"><canvas id="pv2"></canvas></div>
+    <div class="phones" id="c1_phones"></div>
+    <div class="pick" id="c1_pick"></div>
+    <button class="big" id="c1_next"></button>
+    <button class="big sec" id="c1_back"></button>
+  </div>
+  <div class="step" id="st2">
+    <div class="h2" id="c2_h"></div><p class="p" id="c2_p"></p>
+    <button class="big" id="c2_share"></button>
+    <button class="big sec" id="c2_next"></button>
+  </div>
+  <div class="step" id="st3">
+    <div class="h2" id="c3_h"></div><p class="p" id="c3_p"></p>
+    <div class="phones" id="c3_phones"></div>
+    <div class="pick" id="c3_pick"></div>
+    <p class="p" id="c3_p2"></p>
+    <button class="big" id="c3_go"></button>
+    <button class="big sec" id="c3_back"></button>
+  </div>
+</div></div>
+<div id="stage"><canvas id="cv"></canvas><div id="count"><b>3</b><span></span></div><div id="hud"><button id="back">✕</button><span class="mid" id="hud_mid"></span><span><button id="sync"></button> <button id="save">★</button></span></div></div>
+<div id="toast"></div>
+<script>
+'use strict';
+const VERSION='1.3';
+// ===== 언어 / i18n =====
+const L=(navigator.language||'en').slice(0,2);
+const I18N={
+ ko:{title:'LED 전광판',sub:'글자를 넣고 «띄우기». 줄을 바꾸면 순서대로 나옵니다. 가로로 돌리면 더 큽니다.',ph:'사랑해 ♥\n(줄 바꾸면 다음 문구)',color:'글자색',bg:'배경색',size:'크기',speed:'속도',motion:'움직임',m1:'흐르기',m2:'고정',m3:'튕기기',blink:'깜빡임',glow:'네온 빛',mirror:'거울',saved:'저장됨',go:'띄우기 ▶',tip:'띄운 화면을 한 번 누르면 메뉴가 나옵니다. 밝기를 최대로 올리면 더 잘 보입니다.',
+   chain:'폰 이어 붙이기',chain_help:'친구 폰을 나란히 놓으면 한 문장이 폰을 건너 흐릅니다. 링크를 보내고, 각자 «몇 번째»를 고른 뒤, 10초 안에 모두 «띄우기»를 누르세요.',phones:'폰 수',mine:'나는',share:'친구에게 링크 보내기',share_help:'같은 글자·색·속도가 그대로 전달됩니다.',sync:'맞추기',synced:'맞췄습니다 · 10초 안에 모두 누르세요',copied:'링크를 복사했습니다',savedok:'저장했습니다',mid:'대 중 번째',
+   open_chain:'📱📱 친구 폰이랑 이어 붙이기',c1_h:'폰 몇 대를 이어요?',c1_p:'나란히 놓은 폰들을 한 문장이 건너갑니다. 글자·색·속도는 지금 설정 그대로.',c1_next:'다음 →',back:'← 뒤로',
+   c2_h:'친구에게 링크 보내기',c2_p:'친구가 링크를 열면 같은 글자가 들어 있고, 자기 자리만 고르면 됩니다.',c2_share:'링크 보내기',c2_next:'보냈어요 · 다음 →',
+   c3_h:'내 폰은 몇 번째?',c3_p:'왼쪽부터 1번. 폰마다 다르게 골라요.',c3_p2:'모두 고른 뒤, 10초 안에 각자 «함께 띄우기»를 누르세요. 카운트다운 뒤 동시에 시작합니다.',c3_go:'함께 띄우기 ▶',count:'다른 폰도 지금 누르세요'},
+ en:{title:'LED Banner',sub:'Type text and tap Show. New lines play in order. Rotate to landscape for bigger letters.',ph:'I ♥ YOU\n(new line = next message)',color:'Text',bg:'Background',size:'Size',speed:'Speed',motion:'Motion',m1:'Scroll',m2:'Still',m3:'Bounce',blink:'Blink',glow:'Neon glow',mirror:'Mirror',saved:'Saved',go:'Show ▶',tip:'Tap the screen once for the menu. Turn brightness up for best results.',
+   chain:'Chain phones',chain_help:'Line up your friends\' phones and one message flows across all of them. Send the link, each picks their position, then everyone taps Show within 10 seconds.',phones:'Phones',mine:'Mine',share:'Send link to friends',share_help:'Text, colors and speed are shared as-is.',sync:'Re-sync',synced:'Synced · everyone tap within 10 s',copied:'Link copied',savedok:'Saved',mid:'of',
+   open_chain:'📱📱 Chain with friends\' phones',c1_h:'How many phones?',c1_p:'One message flows across phones placed side by side. Your text, colors and speed are used as-is.',c1_next:'Next →',back:'← Back',
+   c2_h:'Send the link to friends',c2_p:'When a friend opens it, the same text is already there. They only pick their position.',c2_share:'Send link',c2_next:'Sent · Next →',
+   c3_h:'Which phone is mine?',c3_p:'Count from the left. Each phone picks a different number.',c3_p2:'When everyone has picked, each taps «Start together» within 10 seconds. A countdown starts all phones at once.',c3_go:'Start together ▶',count:'Everyone tap now'},
+ ja:{title:'LED電光掲示板',sub:'文字を入れて「表示」。改行すると順番に出ます。横向きで大きく。',ph:'大好き ♥\n(改行で次の文)',color:'文字色',bg:'背景色',size:'サイズ',speed:'速さ',motion:'動き',m1:'流れる',m2:'固定',m3:'バウンド',blink:'点滅',glow:'ネオン',mirror:'ミラー',saved:'保存',go:'表示 ▶',tip:'画面を一度タップするとメニュー。明るさ最大で見やすく。',
+   chain:'スマホをつなぐ',chain_help:'友だちのスマホを並べると、1つの文が画面をまたいで流れます。リンクを送り、各自「何番目」を選び、10秒以内に全員「表示」を押してください。',phones:'台数',mine:'自分は',share:'友だちにリンクを送る',share_help:'文字・色・速さがそのまま共有されます。',sync:'合わせる',synced:'合わせました · 10秒以内に全員押す',copied:'リンクをコピー',savedok:'保存しました',mid:'台中',
+   open_chain:'📱📱 友だちのスマホとつなぐ',c1_h:'何台つなぐ？',c1_p:'並べたスマホを1つの文が流れます。文字・色・速さは今の設定のまま。',c1_next:'次へ →',back:'← 戻る',
+   c2_h:'友だちにリンクを送る',c2_p:'友だちがリンクを開くと同じ文字が入っています。自分の位置だけ選びます。',c2_share:'リンクを送る',c2_next:'送った · 次へ →',
+   c3_h:'自分のスマホは何番目？',c3_p:'左から1番。スマホごとに違う番号を。',c3_p2:'全員選んだら、10秒以内に各自「いっしょに表示」を押してください。カウントダウン後に同時に始まります。',c3_go:'いっしょに表示 ▶',count:'ほかのスマホも今押して'},
+ es:{title:'Letrero LED',sub:'Escribe y pulsa Mostrar. Cada línea sale en orden. Gira el móvil para letras más grandes.',ph:'TE QUIERO ♥\n(nueva línea = siguiente mensaje)',color:'Texto',bg:'Fondo',size:'Tamaño',speed:'Velocidad',motion:'Movimiento',m1:'Desplazar',m2:'Fijo',m3:'Rebote',blink:'Parpadeo',glow:'Neón',mirror:'Espejo',saved:'Guardados',go:'Mostrar ▶',tip:'Toca la pantalla una vez para el menú. Sube el brillo al máximo.',
+   chain:'Encadenar móviles',chain_help:'Pon los móviles de tus amigos en fila y un mensaje fluye por todos. Envía el enlace, cada uno elige su posición y todos pulsan Mostrar en 10 segundos.',phones:'Móviles',mine:'Yo soy',share:'Enviar enlace',share_help:'Se comparten texto, colores y velocidad.',sync:'Sincronizar',synced:'Listo · todos pulsen en 10 s',copied:'Enlace copiado',savedok:'Guardado',mid:'de',
+   open_chain:'📱📱 Encadenar con amigos',c1_h:'¿Cuántos móviles?',c1_p:'Un mensaje fluye por los móviles puestos en fila. Se usan tu texto, colores y velocidad.',c1_next:'Siguiente →',back:'← Atrás',
+   c2_h:'Envía el enlace',c2_p:'Al abrirlo, tus amigos ya tienen el mismo texto. Solo eligen su posición.',c2_share:'Enviar enlace',c2_next:'Enviado · Siguiente →',
+   c3_h:'¿Cuál es mi móvil?',c3_p:'Cuenta desde la izquierda. Cada móvil elige un número distinto.',c3_p2:'Cuando todos hayan elegido, cada uno pulsa «Empezar juntos» en 10 segundos. Una cuenta atrás los arranca a la vez.',c3_go:'Empezar juntos ▶',count:'Todos pulsen ahora'},
+};
+const T=I18N[L]||I18N.en; document.documentElement.lang=L;
+const $=id=>document.getElementById(id);
+[['open_chain','open_chain'],['c1_h','c1_h'],['c1_p','c1_p'],['c1_next','c1_next'],['c1_back','back'],['c2_h','c2_h'],['c2_p','c2_p'],['c2_share','c2_share'],['c2_next','c2_next'],['c3_h','c3_h'],['c3_p','c3_p'],['c3_p2','c3_p2'],['c3_go','c3_go'],['c3_back','back'],['t_title','title'],['t_sub','sub'],['t_color','color'],['t_bg','bg'],['t_size','size'],['t_speed','speed'],['t_motion','motion'],['t_m1','m1'],['t_m2','m2'],['t_m3','m3'],['t_blink','blink'],['t_glow','glow'],['t_mirror','mirror'],['t_saved','saved'],['go','go'],['t_tip','tip'],['sync','sync']].forEach(([id,k])=>$(id).textContent=T[k]);
+$('text').placeholder=T.ph; document.title=T.title;
+function toast(msg){ const el=$('toast'); el.textContent=msg; el.style.opacity=1; clearTimeout(toast.t); toast.t=setTimeout(()=>el.style.opacity=0,1800); }
+
+// ===== 상태 / state =====
+const COLORS=['#ff3b3b','#ff8c1a','#ffd54a','#4cff5a','#2bd4ff','#7a6bff','#ff5bd6','#ffffff'];
+const BGS=['#000000','#1a0000','#001a0a','#00101f','#1a1200','#ffffff'];
+const S={text:'',fg:'#ffd54a',bg:'#000000',size:80,speed:45,motion:'scroll',blink:false,glow:true,mirror:false,n:1,k:1};
+try{ Object.assign(S, JSON.parse(localStorage.getItem('led_last')||'{}')); }catch(e){}
+// 링크로 받은 설정 / config from shared link (#c=base64url json)
+function b64e(o){ return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function b64d(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; return JSON.parse(decodeURIComponent(escape(atob(s)))); }
+const hash=new URLSearchParams(location.hash.slice(1)); let fromLink=false;
+if(hash.get('c')){ try{ const c=b64d(hash.get('c')); ['text','fg','bg','size','speed','motion','blink','glow','mirror','n'].forEach(k=>{ if(c[k]!==undefined) S[k]=c[k]; }); S.k=Math.min(S.n, Math.max(1, S.k)); fromLink=true; history.replaceState(null,'',location.pathname); }catch(e){} }
+S.n=Math.min(5,Math.max(1,+S.n||1)); S.k=Math.min(S.n,Math.max(1,+S.k||1));
+function chips(el,list,key){ el.innerHTML=''; list.forEach(c=>{ const d=document.createElement('div'); d.className='chip'+(S[key]===c?' on':''); d.style.background=c; if(c==='#ffffff') d.style.border='2px solid #888'; d.onclick=()=>{ S[key]=c; chips(el,list,key); persist(); }; el.appendChild(d); }); }
+chips($('fg'),COLORS,'fg'); chips($('bg'),BGS,'bg');
+$('text').value=S.text; $('size').value=S.size; $('speed').value=S.speed; $('blink').checked=S.blink; $('glow').checked=S.glow; $('mirror').checked=S.mirror;
+[...$('motion').children].forEach(b=>{ b.classList.toggle('on',b.dataset.v===S.motion); b.onclick=()=>{ S.motion=b.dataset.v; [...$('motion').children].forEach(x=>x.classList.toggle('on',x===b)); persist(); }; });
+['text','size','speed','blink','glow','mirror'].forEach(id=>$(id).addEventListener('input',()=>{ S.text=$('text').value; S.size=+$('size').value; S.speed=+$('speed').value; S.blink=$('blink').checked; S.glow=$('glow').checked; S.mirror=$('mirror').checked; persist(); }));
+function persist(){ try{ localStorage.setItem('led_last',JSON.stringify(S)); }catch(e){} }
+// ===== 이어 붙이기 안내 화면 / chain wizard =====
+function shareUrl(){ const c={text:S.text,fg:S.fg,bg:S.bg,size:S.size,speed:S.speed,motion:S.motion,blink:S.blink,glow:S.glow,mirror:S.mirror,n:S.n}; return location.origin+location.pathname+'#c='+b64e(c); }
+async function doShare(){ const url=shareUrl(); track('share',{n:S.n});
+  if(navigator.share){ try{ await navigator.share({title:T.title,text:T.c2_p,url}); return true; }catch(e){} }
+  try{ await navigator.clipboard.writeText(url); toast(T.copied); }catch(e){ prompt('URL',url); } return true; }
+function phonesRow(el,n,k){ el.innerHTML=''; for(let i=1;i<=n;i++){ const d=document.createElement('div'); d.className='ph'+(i===k?' on':''); d.textContent=i; el.appendChild(d); } }
+function pickRow(el,from,to,cur,onpick){ el.innerHTML=''; for(let i=from;i<=to;i++){ const b=document.createElement('button'); b.textContent=i; b.className=i===cur?'on':''; b.onclick=()=>onpick(i); el.appendChild(b); } }
+function step(n){ ['st1','st2','st3'].forEach((id,i)=>$(id).classList.toggle('on',i===n-1)); $('chain').style.display='block'; window.scrollTo(0,0);
+  if(n===1){ pickRow($('c1_pick'),2,5,S.n,i=>{ S.n=i; S.k=Math.min(S.k,i); persist(); step(1); }); phonesRow($('c1_phones'),S.n,0); }
+  if(n===3){ pickRow($('c3_pick'),1,S.n,S.k,i=>{ S.k=i; persist(); step(3); }); phonesRow($('c3_phones'),S.n,S.k); } }
+function closeChain(){ $('chain').style.display='none'; }
+$('open_chain').onclick=()=>{ if(S.n<2) S.n=2; step(1); };
+$('c1_next').onclick=()=>step(2); $('c1_back').onclick=closeChain;
+$('c2_share').onclick=doShare; $('c2_next').onclick=()=>step(3);
+$('c3_back').onclick=()=>step(2);
+$('c3_go').onclick=()=>{ closeChain(); showTogether(); };
+if(fromLink){ step(3); }
+// ===== 저장 목록 / presets =====
+let presets=[]; try{ presets=JSON.parse(localStorage.getItem('led_presets')||'[]'); }catch(e){}
+function drawPresets(){ const el=$('presets'); el.innerHTML=''; if(!presets.length){ el.innerHTML='<span class="tiny">★</span>'; }
+  presets.forEach((p,i)=>{ const b=document.createElement('button'); b.className='preset'; b.textContent=(p.text||'…').split('\n')[0]; b.style.color=p.fg; b.onclick=()=>{ Object.assign(S,p); persist(); location.reload(); }; b.oncontextmenu=e=>{ e.preventDefault(); presets.splice(i,1); savePresets(); }; let t; b.ontouchstart=()=>{ t=setTimeout(()=>{ presets.splice(i,1); savePresets(); },700); }; b.ontouchend=()=>clearTimeout(t); el.appendChild(b); }); }
+function savePresets(){ try{ localStorage.setItem('led_presets',JSON.stringify(presets)); }catch(e){} drawPresets(); }
+drawPresets();
+
+// ===== 그리기 / renderer =====
+// 순서 재생: 줄마다 한 문구. 흐르기는 한 바퀴 지나면 다음 줄, 고정·튕기기는 3초마다.
+// 이어 붙이기: n대가 가로로 붙은 «긴 화면»을 가정하고 내 폰(k번째)은 그 중 한 칸만 그린다. 시작 시각은 10초 단위 시계에 맞춰 모든 폰이 같다.
+let epoch=0; function syncEpoch(){ epoch=Math.floor(Date.now()/10000)*10000; }
+function nextEpoch(){ epoch=Math.ceil((Date.now()+500)/10000)*10000; } // 다음 10초 경계에 모두 같이 시작
+function makeRenderer(canvas, chained){
+  const ctx=canvas.getContext('2d'); let W=0,H=0,raf=0, t0=performance.now(), x=null, dir=1, line=0, lineT=0, lastWrap=0;
+  function fit(){ const w=Math.round(canvas.clientWidth*devicePixelRatio), h=Math.round(canvas.clientHeight*devicePixelRatio); if(w!==W||h!==H){ W=canvas.width=w; H=canvas.height=h; } }
+  function frame(now){
+    fit(); const dt=Math.min(.05,(now-t0)/1000); t0=now;
+    ctx.fillStyle=S.bg; ctx.fillRect(0,0,W,H);
+    const lines=(S.text||T.ph.split('\n')[0]).split('\n').map(s=>s.trim()).filter(Boolean); if(!lines.length) lines.push('LED');
+    const n=chained? S.n : 1, k=chained? S.k-1 : 0; const VW=W*n; // 가상 전체 폭 / virtual width across phones
+    const fs=H*(S.size/100)*.9; ctx.font=`900 ${fs}px system-ui,"Malgun Gothic","Apple SD Gothic Neo",sans-serif`; ctx.textBaseline='middle';
+    const sp=(S.speed/100)*W*1.4+W*.05; const gap=Math.max(W*.3, fs*1.2);
+    const scrolling = S.motion==='scroll' || n>1;
+    let text, dx;
+    if(scrolling){
+      // 모든 줄을 한 띠로 이어 붙여 위치를 시간으로 계산(폰마다 같은 시각 → 같은 위치) / one long strip, position from shared clock
+      const widths=lines.map(t=>ctx.measureText(t).width); const total=widths.reduce((a,w)=>a+w+gap,0)+VW;
+      const elapsed = chained ? Math.max(0,(Date.now()-epoch)/1000) : (now-(frame.start||(frame.start=now)))/1000;
+      let pos = VW - (elapsed*sp)%total; // 띠의 시작점(가상 좌표)
+      ctx.save(); if(S.mirror){ ctx.translate(W,0); ctx.scale(-1,1); } ctx.fillStyle=S.fg; if(S.glow){ ctx.shadowColor=S.fg; ctx.shadowBlur=fs*.25; }
+      const on = !S.blink || (Math.floor(now/400)%2===0);
+      if(on) for(let pass=0; pass<2; pass++){ let p=pos+pass*total; for(let i=0;i<lines.length;i++){ const vx=p; const sx=vx-k*W; if(sx<W && sx+widths[i]>0) ctx.fillText(lines[i],sx,H/2); p+=widths[i]+gap; } }
+      ctx.restore();
+    } else {
+      lineT+=dt; if(lineT>3){ lineT=0; line=(line+1)%lines.length; } text=lines[line%lines.length]; const tw=ctx.measureText(text).width;
+      if(S.motion==='bounce'){ if(x===null) x=Math.max(0,(W-tw)/2); if(tw<W){ x+=dir*sp*dt*.5; if(x<=0){x=0;dir=1;} if(x+tw>=W){x=W-tw;dir=-1;} } dx=x; } else dx=(W-tw)/2;
+      const on = !S.blink || (Math.floor(now/400)%2===0);
+      if(on){ ctx.save(); if(S.mirror){ ctx.translate(W,0); ctx.scale(-1,1); } ctx.fillStyle=S.fg; if(S.glow){ ctx.shadowColor=S.fg; ctx.shadowBlur=fs*.25; } ctx.fillText(text,dx,H/2); ctx.restore(); }
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  return {start(){ x=null; dir=1; line=0; lineT=0; W=H=0; frame.start=null; t0=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(frame); }, stop(){ cancelAnimationFrame(raf); }};
+}
+const pv=makeRenderer($('pv'), false); pv.start(); const pv2=makeRenderer($('pv2'), false); pv2.start();
+const big=makeRenderer($('cv'), true);
+
+// ===== 전체화면 / stage =====
+let wake=null;
+async function showTogether(){ nextEpoch(); await show(true); const c=$('count'); c.style.display='flex'; c.querySelector('span').textContent=T.count;
+  const tick=()=>{ const left=(epoch-Date.now())/1000; if(left<=0){ c.style.display='none'; return; } c.querySelector('b').textContent=Math.ceil(left); requestAnimationFrame(tick); }; tick(); }
+async function show(together){ if(!together){ S.n=1; S.k=1; syncEpoch(); } $('stage').style.display='block'; $('hud_mid').textContent = S.n>1 ? `${S.k} / ${S.n}` : ''; $('sync').style.display=S.n>1?'':'none'; big.start(); track('show',{motion:S.motion,n:S.n});
+  try{ await document.documentElement.requestFullscreen(); }catch(e){}
+  try{ await screen.orientation.lock('landscape'); }catch(e){}
+  try{ wake=await navigator.wakeLock.request('screen'); }catch(e){}
+}
+function hide(){ big.stop(); $('stage').style.display='none'; try{ wake&&wake.release(); wake=null; }catch(e){} try{ screen.orientation.unlock(); }catch(e){} if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+$('go').onclick=()=>show(false); $('back').onclick=hide;
+$('sync').onclick=()=>{ nextEpoch(); const c=$('count'); c.style.display='flex'; c.querySelector('span').textContent=T.count; const tick=()=>{ const left=(epoch-Date.now())/1000; if(left<=0){ c.style.display='none'; return; } c.querySelector('b').textContent=Math.ceil(left); requestAnimationFrame(tick); }; tick(); };
+let hudT; $('cv').addEventListener('pointerdown',()=>{ $('hud').classList.add('show'); clearTimeout(hudT); hudT=setTimeout(()=>$('hud').classList.remove('show'),2500); });
+$('save').onclick=()=>{ presets.unshift({text:S.text,fg:S.fg,bg:S.bg,size:S.size,speed:S.speed,motion:S.motion,blink:S.blink,glow:S.glow,mirror:S.mirror}); presets=presets.slice(0,12); savePresets(); toast(T.savedok); };
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && $('stage').style.display==='block' && !wake && navigator.wakeLock) navigator.wakeLock.request('screen').then(w=>wake=w).catch(()=>{}); });
+addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
+
+// ===== 측정·광고 자리 / analytics & ad slots (공통 틀에서 교체) =====
+function track(n,p={}){ if(window.gtag) gtag('event',n,p); }
+// shortcut: 광고·광고 제거 결제는 Capacitor 틀에서 붙임. 웹 판은 광고 없음
+console.log('LED Banner', VERSION, L);
+</script>
+</body>
+</html>
