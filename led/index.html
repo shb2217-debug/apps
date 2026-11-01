@@ -112,7 +112,7 @@
 <div id="toast"></div>
 <script>
 'use strict';
-const VERSION='1.3';
+const VERSION='1.4';
 // ===== 언어 / i18n =====
 const L=(navigator.language||'en').slice(0,2);
 const I18N={
@@ -151,7 +151,7 @@ try{ Object.assign(S, JSON.parse(localStorage.getItem('led_last')||'{}')); }catc
 // 링크로 받은 설정 / config from shared link (#c=base64url json)
 function b64e(o){ return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
 function b64d(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; return JSON.parse(decodeURIComponent(escape(atob(s)))); }
-const hash=new URLSearchParams(location.hash.slice(1)); let fromLink=false;
+const hash=new URLSearchParams(location.search); if(!hash.get('c')) location.hash.slice(1).split('&').forEach(kv=>{ const [k,v]=kv.split('='); if(k==='c') hash.set('c',v); }); let fromLink=false; // 카톡 등이 #꼬리를 떼므로 ?c= 를 쓴다
 if(hash.get('c')){ try{ const c=b64d(hash.get('c')); ['text','fg','bg','size','speed','motion','blink','glow','mirror','n'].forEach(k=>{ if(c[k]!==undefined) S[k]=c[k]; }); S.k=Math.min(S.n, Math.max(1, S.k)); fromLink=true; history.replaceState(null,'',location.pathname); }catch(e){} }
 S.n=Math.min(5,Math.max(1,+S.n||1)); S.k=Math.min(S.n,Math.max(1,+S.k||1));
 function chips(el,list,key){ el.innerHTML=''; list.forEach(c=>{ const d=document.createElement('div'); d.className='chip'+(S[key]===c?' on':''); d.style.background=c; if(c==='#ffffff') d.style.border='2px solid #888'; d.onclick=()=>{ S[key]=c; chips(el,list,key); persist(); }; el.appendChild(d); }); }
@@ -161,7 +161,7 @@ $('text').value=S.text; $('size').value=S.size; $('speed').value=S.speed; $('bli
 ['text','size','speed','blink','glow','mirror'].forEach(id=>$(id).addEventListener('input',()=>{ S.text=$('text').value; S.size=+$('size').value; S.speed=+$('speed').value; S.blink=$('blink').checked; S.glow=$('glow').checked; S.mirror=$('mirror').checked; persist(); }));
 function persist(){ try{ localStorage.setItem('led_last',JSON.stringify(S)); }catch(e){} }
 // ===== 이어 붙이기 안내 화면 / chain wizard =====
-function shareUrl(){ const c={text:S.text,fg:S.fg,bg:S.bg,size:S.size,speed:S.speed,motion:S.motion,blink:S.blink,glow:S.glow,mirror:S.mirror,n:S.n}; return location.origin+location.pathname+'#c='+b64e(c); }
+function shareUrl(){ const c={text:S.text,fg:S.fg,bg:S.bg,size:S.size,speed:S.speed,motion:S.motion,blink:S.blink,glow:S.glow,mirror:S.mirror,n:S.n}; return location.origin+location.pathname+'?c='+b64e(c); }
 async function doShare(){ const url=shareUrl(); track('share',{n:S.n});
   if(navigator.share){ try{ await navigator.share({title:T.title,text:T.c2_p,url}); return true; }catch(e){} }
   try{ await navigator.clipboard.writeText(url); toast(T.copied); }catch(e){ prompt('URL',url); } return true; }
